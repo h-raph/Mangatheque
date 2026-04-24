@@ -1,0 +1,178 @@
+*,
+*::after,
+*::before {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+#overlayAjout {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+#popup {
+    background: white;
+    width: 100%;
+    padding: 20px;
+    margin: 150px auto;
+    border-radius: 10px;
+    text-align: center;
+}
+
+button {
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+#filtre-langage {
+    margin: 0.5rem 0px;
+}
+
+#filtre-langage p {
+    margin-bottom: 0.4rem;
+}
+
+#filtre-langage .filtre-link {
+    text-decoration: none;
+    padding: 0.4rem 1rem;
+    margin: 1rem;
+    border-radius: 50px;
+    border: 1px solid black;
+    color: black;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+#tableau {
+    display: grid;
+    justify-content: space-evenly;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.cards {
+    position: relative;
+    width: fit-content;
+    min-height: fit-content;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 10px;
+}
+
+.status:hover {
+    cursor: pointer;
+}
+
+.statusMenu {
+    display: none;
+    position: absolute;
+    top: 20px;
+    /* sera recalculé en JS si besoin */
+    left: 10px;
+    min-width: 140px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+    padding: 6px 8px;
+}
+
+.statusMenu ul {
+    list-style: none;
+}
+
+.statusMenu li {
+    padding: 8px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.statusMenu li:hover,
+.statusMenu li:focus {
+    background: #f0f0f0;
+    outline: none;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-height: fit-content;
+}
+
+.cards #genre {
+    display: flex;
+}
+
+/* ################### STATUS ################### */
+.status {
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    border: 1px solid black;
+    margin-right: 8px;
+}
+
+.status.vide {
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    border: 1px solid black;
+    background-color: white;
+    margin-right: 8px;
+}
+
+.status.en-cours {
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    background-color: green;
+    border: none;
+    margin-right: 8px;
+}
+
+.status.terminer {
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    background-color: rgb(4, 0, 128);
+    border: none;
+    margin-right: 8px;
+}
+
+.status.en-pause {
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    background-color: orange;
+    border: none;
+    margin-right: 8px;
+}
+
+.status.a-lire {
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    background-color: rgb(128, 0, 115);
+    border: none;
+    margin-right: 8px;
+}
+
+.status.abandonner {
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    background-color: red;
+    border: none;
+    margin-right: 8px;
+}
