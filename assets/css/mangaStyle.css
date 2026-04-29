@@ -30,6 +30,7 @@ button {
     cursor: pointer;
 }
 
+/* ========== FILTRE LANGAGES ========== */
 #filtre-langage {
     margin: 0.5rem 0px;
 }
@@ -38,7 +39,7 @@ button {
     margin-bottom: 0.4rem;
 }
 
-#filtre-langage .filtre-link {
+#filtre-langage .filtre-link.link-langage {
     text-decoration: none;
     padding: 0.4rem 1rem;
     margin: 1rem;
@@ -48,9 +49,50 @@ button {
     font-size: 0.82rem;
     font-weight: 500;
     cursor: pointer;
-    text-decoration: none;
     transition: all 0.2s;
 }
+
+/* ===================================== */
+
+/* ========== FILTRE GENRES ========== */
+#filtre-genre {
+    width: 50vw;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    padding: 6px 8px;
+}
+
+#filtre-genre ul {
+    max-width: 100%;
+    list-style: none;
+    display: flex;
+}
+
+#filtre-genre li {
+    height: 1.4rem;
+    border-radius: 5px;
+    border: 1.5px solid black;
+}
+
+#filtre-genre li:hover {
+    cursor: pointer;
+}
+
+#filtre-genre li:focus-within {
+    color: green;
+    border-color: green;
+}
+
+#filtre-genre li .filtre-link.link-genre{
+    font-size: 0.8rem;
+    padding: 5px;
+    color: black;
+    text-decoration: none;
+}
+
+
+/* =================================== */
 
 #tableau {
     display: grid;

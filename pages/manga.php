@@ -81,6 +81,14 @@ foreach ($resGenres as $row) {
     }
 }
 
+// Dédupliquer et réindexer les genres
+if (!empty($genresArray)) {
+    natcasesort($genresArray); // tri sans tenir compte de la casse
+    $genresArray = array_values(array_unique($genresArray));
+} else {
+    $genresArray = [];
+}
+
 // Récupération des langages (sans affichage de debug)
 $langages = $pdo->prepare("SELECT langage FROM manga");
 $langages->execute();
@@ -95,7 +103,7 @@ foreach ($resLangages as $row) {
     }
 }
 
-// dédupliquer et trier (faire avant tout affichage)
+// Dédupliquer et trier (faire avant tout affichage)
 if (!empty($langagesArray)) {
     natcasesort($langagesArray);
     $langagesArray = array_values(array_unique($langagesArray));
@@ -103,13 +111,6 @@ if (!empty($langagesArray)) {
     $langagesArray = [];
 }
 
-// dédupliquer et réindexer
-if (!empty($genresArray)) {
-    natcasesort($genresArray); // tri sans tenir compte de la casse
-    $genresArray = array_values(array_unique($genresArray));
-} else {
-    $genresArray = [];
-}
 ?>
 
 <!DOCTYPE html>
@@ -165,9 +166,9 @@ if (!empty($genresArray)) {
         <section id="filtre">
             <!-- Langage -->
             <div id="filtre-langage">
-                <p for="langage">Langages</p>
+                <span>Langages</span>
                 <?php if (!empty($langagesArray)): ?>
-                    <a href="?langage=<?= "Tout" ?>" class="filtre-link">Tout</a>
+                    <a href="?langage=<?= "Tout" ?>" class="filtre-link link-langage">Tout</a>
                     <?php foreach ($langagesArray as $l): ?>
                         <?php
                         if ($l === "Manga") {
@@ -178,7 +179,7 @@ if (!empty($genresArray)) {
                             $flag = "<span class='fi fi-cn'></span>";
                         }
                         ?>
-                        <a href="?langage=<?= $l ?>" class="filtre-link"><?= $flag . $l ?></a>
+                        <a href="?langage=<?= $l ?>" class="filtre-link link-langage"><?= $flag . $l ?></a>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <option value="">Aucun langage</option>
@@ -186,22 +187,16 @@ if (!empty($genresArray)) {
             </div>
 
             <!-- Genre -->
-            <div id="filtre-genre">
-                <form method="GET">
-                    <label for="genre">Genres</label>
-                    <select name="genre" id="genre" onchange="this.form.submit()">
-                        <?php if (!empty($genresArray)): ?>
-                            <option value="Tout">-- Tout --</option>
-                            <?php foreach ($genresArray as $g): ?>
-                                <?php $select = $selectGenre === $g ? 'selected' : '' ?>
-                                <option value="<?php echo $g; ?>" <?= $select ?>>
-                                    <?php echo $g; ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <option value="">Aucun genre</option>
-                        <?php endif; ?>
-                    </select>
+            <span>Genre</span>
+            <div id="filtre-genre" role="menu">
+                <?php if (!empty($genresArray)): ?>
+                    <ul>
+                        <li tabindex="0"><a href="&genre=<?= "Tout" ?>" class="filtre-link link-genre">Tout</a></li>
+                        <?php foreach ($genresArray as $g): ?>
+                            <li tabindex="0"><a href="&genre=<?= str_replace(' ', '-', $g) ?>" class="filtre-link link-genre"><?= $g ?></a></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
             </div>
 
             <!-- Tri -->
@@ -210,19 +205,17 @@ if (!empty($genresArray)) {
                 <option value="">-- --</option>
                 <?php foreach ($triList as $t): ?>
                     <?php $select = $tri === $t ? 'selected' : '' ?>
-                    <a><option value="<?php echo $t; ?>" <?= $select ?>>
+                    <option value="<?php echo $t; ?>" <?= $select ?>>
                         <?php echo $t; ?>
-                    </option></a>
+                    </option>
                 <?php endforeach; ?>
             </select>
-            </form>
         </section>
 
         <!-- Tableau -->
         <section id="tableau">
             <?php foreach ($mangas as $m): ?>
                 <div id="<?= strtolower(str_replace(' ', '-', $m['titre'])); ?>" class="<?= strtolower($m['langage']); ?> cards">
-                    <!-- <img src="" alt=""> -->
 
                     <div class="statusMenu" aria-hidden="true" role="menu">
                         <ul>
