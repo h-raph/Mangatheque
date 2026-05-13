@@ -19,25 +19,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $auteur = htmlspecialchars(trim($_POST['auteur'] ?? ''));
     $demographie = htmlspecialchars(trim($_POST['demographie'] ?? ''));
     $langage = htmlspecialchars(trim($_POST['langages'] ?? ''));
-    $genre1 = htmlspecialchars(trim($_POST['genre1'] ?? ''));
-    $genre2 = htmlspecialchars(trim($_POST['genre2'] ?? ''));
-    $genre3 = htmlspecialchars(trim($_POST['genre3'] ?? ''));
-    $theme = htmlspecialchars(trim($_POST['theme'] ?? ''));
+    $genre = $_POST['genre'] ?? [];
+
+    echo $genre;
+    var_dump($_POST);
 
     // Requête préparée pour éviter les injections
-    $sql = "INSERT INTO `manga` (`titre`, `auteur`, `demographie`, `langage`, `genre_1`, `genre_2`, `genre_3`, `theme`)
-            VALUES (:titre, :auteur, :demographie, :langage, :g1, :g2, :g3, :theme)";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
+    $sql_manga = "INSERT INTO `manga` (`titre`, `auteur`, `demographie`, `langage`)
+            VALUES (:titre, :auteur, :demographie, :langage)";
+    $stmt_manga = $pdo->prepare($sql_manga);
+    $stmt_manga->execute([
         ':titre' => $titre,
         ':auteur' => $auteur,
         ':demographie' => $demographie,
         ':langage' => $langage,
-        ':g1' => $genre1,
-        ':g2' => $genre2,
-        ':g3' => $genre3,
-        ':theme' => $theme,
     ]);
+    $manga_id = $pdo->lastInsertId();
+
+    $sql_genre = $pdo->prepare("SELECT id_genre FROM genre WHERE genres = :genres");
+    $sql_genre->bindValue(':genres', $genre, PDO::PARAM_STR);
+    $sql_genre->execute();
 
     // Redirection PRG pour empêcher la double soumission au rafraîchissement
     header('Location: ' . $_SERVER['REQUEST_URI']);
@@ -52,6 +53,10 @@ $allManga = $resManga->fetchAll(PDO::FETCH_ASSOC);
 // Langage filtre
 $filtreLangage = $_GET['langage'] ?? '';
 
+// Genre filtre
+$genres_selectionnes = $_GET['genre'] ?? [];
+$genres_propres = array_map('htmlspecialchars', $genres_selectionnes);
+
 foreach ($allManga as $m) {
     if ($filtreLangage === 'Tout' || $filtreLangage === '') {
         $reqManga = $pdo->prepare("SELECT * FROM manga");
@@ -65,13 +70,12 @@ foreach ($allManga as $m) {
     }
 }
 
-
 // Récupération des genres (sans affichage de debug)
-$genres = $pdo->query("SELECT genre_1, genre_2, genre_3 FROM manga");
-$resGenres = $genres->fetchAll(PDO::FETCH_ASSOC);
+/* $genres = $pdo->query("SELECT genre_1, genre_2, genre_3 FROM manga");
+$resGenres = $genres->fetchAll(PDO::FETCH_ASSOC); */
 
 // Extraire les genres uniques dans un tableau simple
-$genresArray = [];
+/* $genresArray = [];
 foreach ($resGenres as $row) {
     foreach (['genre_1', 'genre_2', 'genre_3'] as $col) {
         $g = trim($row[$col] ?? '');
@@ -79,7 +83,7 @@ foreach ($resGenres as $row) {
             $genresArray[] = $g;
         }
     }
-}
+} */
 
 // Dédupliquer et réindexer les genres
 if (!empty($genresArray)) {
@@ -150,13 +154,14 @@ if (!empty($langagesArray)) {
                     <option value="Manhwa">Manhwa</option>
                 </select>
 
-                <input type="text" name="genre1" id="genre1" placeholder="Genre n°1">
-                <input type="text" name="genre2" id="genre2" placeholder="Genre n°2">
-                <input type="text" name="genre3" id="genre3" placeholder="Genre n°3">
+                <div id="container-genres">
+                    <div class="genre-input-group">
+                        <input type="text" name="genre[]" placeholder="Nom du genre (ex: Fantasy)">
+                    </div>
+                </div>
+                <button type="button" id="add-genre-btn">+ Ajouter un genre</button>
 
-                <input type="text" name="theme" id="theme" placeholder="Thême">
-
-                <button type="submit" id="fermer">Ajouter</button>
+                <button type="submit" id="fermer">Ajouter le livre</button>
             </form>
         </div>
     </header>
@@ -191,12 +196,17 @@ if (!empty($langagesArray)) {
             <div id="filtre-genre" role="menu">
                 <?php if (!empty($genresArray)): ?>
                     <ul>
-                        <li tabindex="0"><a href="&genre=<?= "Tout" ?>" class="filtre-link link-genre">Tout</a></li>
+                        <li tabindex="0" class="tout filtre-liste"><span class="genre-name">Tout</span></li>
                         <?php foreach ($genresArray as $g): ?>
-                            <li tabindex="0"><a href="&genre=<?= str_replace(' ', '-', $g) ?>" class="filtre-link link-genre"><?= $g ?></a></li>
+                            <li tabindex="0" class="<?= strtolower(str_replace(' ', '-', $g)) ?> filtre-liste"><span class="genre-name"><?= $g ?></span></li>
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
+                <br>
+                <div id="bouton">
+                    <button id="reset">Reset</button>
+                    <button id="search">Rechercher</button>
+                </div>
             </div>
 
             <!-- Tri -->
@@ -204,8 +214,8 @@ if (!empty($langagesArray)) {
             <select name="tri" id="tri" onchange="this.form.submit()">
                 <option value="">-- --</option>
                 <?php foreach ($triList as $t): ?>
-                    <?php $select = $tri === $t ? 'selected' : '' ?>
-                    <option value="<?php echo $t; ?>" <?= $select ?>>
+                    <?php /* $select = $tri === $t ? 'selected' : '' */ ?>
+                    <option value="<?php echo $t; ?>" $select>
                         <?php echo $t; ?>
                     </option>
                 <?php endforeach; ?>

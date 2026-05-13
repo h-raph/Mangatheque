@@ -20,24 +20,88 @@ if (overlayAjout) {
     });
 }
 
-/* --- TITRE DES MANGAS --- */
-let mangaTitre = [];
+/* --- AJOUT DES CHAMPS DE TEXTES POUR LES GENRES --- */
+document.getElementById('add-genre-btn').addEventListener('click', () => {
+    const container = document.getElementById('container-genres');
+    const newInput = document.createElement('div');
+    newInput.className = 'genre-input-group';
+    newInput.innerHTML = `<input type="text" name="genre[]" placeholder="Autre genre">`;
+    container.appendChild(newInput);
 
-// remplir le tableau (au lieu d'écraser la variable) et l'exposer si besoin
-document.querySelectorAll('.content h2').forEach(h2 => {
-    mangaTitre.push(h2.textContent.trim());
+    if (newInput) {
+        const popup = document.getElementById('popup');
+        // Crée le bouton uniquement s'il n'existe pas déjà
+        if (popup && !popup.querySelector('#suppr-genre-btn')) {
+            const btnSuppr = document.createElement('button');
+            btnSuppr.id = 'suppr-genre-btn';
+            btnSuppr.type = 'button';
+            btnSuppr.textContent = '- Supprimer un genre';
+            popup.appendChild(btnSuppr);
+
+            // Supprime le dernier champ ajouté (garde au moins un champ)
+            btnSuppr.addEventListener('click', () => {
+                const container = document.getElementById('container-genres');
+                const inputs = container.querySelectorAll('.genre-input-group');
+                if (inputs.length > 1) {
+                    inputs[inputs.length - 1].remove();
+                } else if (inputs.length === 1) {
+                    inputs[0].querySelector('input').value = '';
+                }
+            });
+        }
+    }
 });
-console.log(mangaTitre)
+/* ================================================== */
 
+/* --- FILTRE GENRE --- */
+document.querySelectorAll('.filtre-liste').forEach(liste => {
+    // On colore en vert les genres qu'on a selectionné
+    liste.addEventListener('click', (li) => {
+        li.stopPropagation();
+        const target = li.currentTarget || liste;
+        if (target) {
+            target.style.color = (target.style.color === "") ? 'green' : '';
+            target.style.borderColor = (target.style.borderColor === "") ? 'green' : '';
+            target.classList.toggle('selected-genre')
+        }
+    })
 
-/* --- TRI --- */
-document.querySelectorAll('#tri option').forEach(tri => {
-    const triTexte = tri.textContent.trim();
-    if (triTexte === 'A-Z') {
-    console.log(mangaTitre.sort())
+    // On envoie les genres selectionnés dans l'url
+    const search = document.getElementById('search');
+    if (search) {
+        search.addEventListener('click', (sli) => {
+            sli.preventDefault()
+            // 1. On récupère l'URL actuelle
+            const url = new URL(window.location.href);
+            // 2. On nettoie les anciens paramètres "genre" pour éviter les doublons
+            url.searchParams.delete('genre[]');
+            // 3. On récupère tous nos éléments de genre
+            document.querySelectorAll('.filtre-liste.selected-genre').forEach(gli => {
+                if (gli.textContent.trim() === "Tout") {
+                    url.searchParams.replace('genre[]', 'Tout')
+                }
+                url.searchParams.append('genre[]', gli.textContent.trim());
+            })
+            // 4. On met à jour l'URL (sans recharger la page)
+            window.history.replaceState({}, '', url);
+            console.log("Nouvelle URL : ", url.toString());
+        })
     }
 
+    // On supprimer tous les genres envoyés et selectionnés avec le bouton reset
+    const reset = document.getElementById('reset');
+    reset.addEventListener('click', (rli) => {
+        rli.stopPropagation;
+        const url = new URL(window.location.href);
+        document.querySelectorAll('.filtre-liste').forEach(resetli => {
+            resetli.style.color = (resetli.classList.contains === "selected-genre") ? 'black' : '';
+            resetli.style.borderColor = (resetli.classList.contains === "selected-genre") ? 'black' : '';
+            url.searchParams.delete('genre[]');
+        })
+        window.history.replaceState({}, '', url);
+    })
 })
+
 
 
 /* --- STATUS: overlays uniques par carte --- */
