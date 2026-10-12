@@ -1,203 +1,165 @@
-*,
-*::after,
-*::before {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-}
-
-#overlayAjout {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0);
-}
-
-#popup {
-    background: white;
-    width: 100%;
-    padding: 20px;
-    margin: 150px auto;
-    border-radius: 10px;
-    text-align: center;
+@charset "UTF-8";
+.add__form {
+  max-width: 500px;
+  padding: 12px 24px;
+  margin: 0 auto;
+  border: 2px solid black;
+  border-radius: 8px;
 }
 
 button {
-    padding: 10px 15px;
-    cursor: pointer;
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
 }
 
-/* ========== FILTRE LANGAGES ========== */
-#filtre-langage {
-    margin: 0.5rem 0px;
+.filter {
+  position: relative;
+  /* Repère pour le positionnement de l'overlay */
+  width: fit-content;
+}
+.filter__trigger {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  list-style: none;
+  /* Cache la flèche par défaut sur certains navigateurs */
+}
+.filter__overlay {
+  position: absolute;
+  top: calc(100% + 8px);
+  /* S'affiche juste en dessous du bouton */
+  left: 0;
+  width: 25vw;
+  /* 25% de la largeur de l'écran */
+  min-width: 250px;
+  /* Sécurité pour ne pas être trop étroit sur mobile */
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  /* Passe au-dessus du reste du contenu */
+}
+.filter__form {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.filter__group {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.filter__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.filter__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  /* Défilement si la liste de genres est très longue */
+}
+.filter__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.filter__submit, .filter__reset {
+  align-self: flex-start;
+  padding: 6px 16px;
+  cursor: pointer;
 }
 
-#filtre-langage p {
-    margin-bottom: 0.4rem;
+.show-manga {
+  width: 100vw;
+  display: grid;
+  justify-items: center;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 20px;
+}
+.show-manga__status-menu {
+  display: none;
+  position: absolute;
+  top: 20px;
+  /* sera recalculé en JS si besoin */
+  left: 10px;
+  min-width: 140px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  padding: 6px 8px;
+}
+.show-manga__status-menu--list {
+  list-style: none;
+}
+.show-manga__status-menu--list-content {
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.show-manga__status-menu--list-content:hover, .show-manga__status-menu--list-content:focus {
+  background: #f0f0f0;
+  outline: none;
+}
+.show-manga__status {
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  border: 1px solid black;
+  margin-right: 8px;
+}
+.show-manga__status--vide {
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  border: 1px solid black;
+  margin-right: 8px;
+}
+.show-manga__status--en-cours {
+  background-color: green;
+  border: none;
+}
+.show-manga__status--terminer {
+  background-color: rgb(4, 0, 128);
+  border: none;
+}
+.show-manga__status--en-pause {
+  background-color: orange;
+  border: none;
+}
+.show-manga__status--a-lire {
+  background-color: rgb(128, 0, 115);
+  border: none;
+}
+.show-manga__status--abandonner {
+  background-color: red;
+  border: none;
+}
+.show-manga__cards {
+  position: relative;
+  width: fit-content;
+  min-height: fit-content;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 10px;
+}
+.show-manga__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: fit-content;
 }
 
-#filtre-langage .filtre-link.link-langage {
-    text-decoration: none;
-    padding: 0.4rem 0.8rem;
-    margin: 1rem;
-    border-radius: 50px;
-    border: 1px solid black;
-    color: black;
-    font-size: 0.92rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-/* ===================================== */
-
-/* ========== FILTRE GENRES ========== */
-#filtre-genre {
-    width: 30vw;
-    height: 125px;
-    background: #fff;
-    border-radius: 6px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-    padding: 6px 8px;
-    position: relative;
-}
-
-#filtre-genre ul {
-    max-width: 100%;
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-#filtre-genre li {
-
-    height: 1.4rem;
-    border-radius: 5px;
-    border: 1.5px solid black;
-}
-
-#filtre-genre li:hover {
-    cursor: pointer;
-}
-
-#filtre-genre ul li span {
-    font-size: 0.9rem;
-    padding: 5px;
-}
-
-#filtre-genre #bouton {
-    position: absolute;
-    right: 10px;
-}
-
-
-/* =================================== */
-
-#tableau {
-    display: grid;
-    justify-content: space-evenly;
-    grid-template-columns: repeat(4, 1fr);
-}
-
-.cards {
-    position: relative;
-    width: fit-content;
-    min-height: fit-content;
-    padding: 5px;
-    border: 1px solid black;
-    border-radius: 10px;
-}
-
-.status:hover {
-    cursor: pointer;
-}
-
-.statusMenu {
-    display: none;
-    position: absolute;
-    top: 20px;
-    /* sera recalculé en JS si besoin */
-    left: 10px;
-    min-width: 140px;
-    background: #fff;
-    border-radius: 6px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-    z-index: 50;
-    padding: 6px 8px;
-}
-
-.statusMenu ul {
-    list-style: none;
-}
-
-.statusMenu li {
-    padding: 8px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.statusMenu li:hover,
-.statusMenu li:focus {
-    background: #f0f0f0;
-    outline: none;
-}
-
-.content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: fit-content;
-    min-height: fit-content;
-}
-
-.cards #genre {
-    display: flex;
-}
-
-/* ################### STATUS ################### */
-.status {
-    width: 10px;
-    height: 10px;
-    border-radius: 10px;
-    border: 1px solid black;
-    margin-right: 8px;
-}
-
-.status.vide {
-    width: 10px;
-    height: 10px;
-    border-radius: 10px;
-    border: 1px solid black;
-    background-color: white;
-    margin-right: 8px;
-}
-
-.status.en-cours {
-    background-color: green;
-    border: none;
-}
-
-.status.terminer {
-    background-color: rgb(4, 0, 128);
-    border: none;
-}
-
-.status.en-pause {
-    background-color: orange;
-    border: none;
-}
-
-.status.a-lire {
-    background-color: rgb(128, 0, 115);
-    border: none;
-}
-
-.status.abandonner {
-    background-color: red;
-    border: none;
-}
+/*# sourceMappingURL=mangaStyle.css.map */

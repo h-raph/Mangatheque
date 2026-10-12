@@ -2,118 +2,128 @@
 // Ouverture session et connexion à la base de donnée
 require_once '../partials/_config.php';
 
-// Liste des status
-$status = ['Vide', 'En cours', 'Terminer', 'En pause', 'À lire', 'Abandonner'];
-
-// Liste des tri
-$triList = ['A-Z', 'Z-A', '+ récent', '+ ancient'];
-
-// Liste des drapeaux
-$listFlag = ['jp', 'kr', 'cn'];
-
-
-
 // ==================== Traitement du formulaire POST ====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // # ============= Traitement de l'envoie des mangas =============
+    // ## Récupère les données dans le formualire POST
     $titre = htmlspecialchars(trim($_POST['titre'] ?? ''));
     $auteur = htmlspecialchars(trim($_POST['auteur'] ?? ''));
     $demographie = htmlspecialchars(trim($_POST['demographie'] ?? ''));
-    $langage = htmlspecialchars(trim($_POST['langages'] ?? ''));
-    $genre = $_POST['genre'] ?? [];
+    $langage = htmlspecialchars(trim($_POST['langage'] ?? ''));
+    $genresSaisis = array_map('trim', explode(',', $_POST['genre'] ?? ''));
+    print_r($genresSaisis);
 
-    echo $genre;
-    var_dump($_POST);
-
-    // Requête préparée pour éviter les injections
-    $sql_manga = "INSERT INTO `manga` (`titre`, `auteur`, `demographie`, `langage`)
-            VALUES (:titre, :auteur, :demographie, :langage)";
-    $stmt_manga = $pdo->prepare($sql_manga);
-    $stmt_manga->execute([
-        ':titre' => $titre,
-        ':auteur' => $auteur,
-        ':demographie' => $demographie,
-        ':langage' => $langage,
-    ]);
+    // ## Envoie les données dans la table manga
+    $stmt_manga = $pdo->prepare("INSERT INTO `manga` (`titre`, `auteur`, `demographie`, `langage`) VALUES (:titre, :auteur, :demographie, :langage)");
+    $stmt_manga->bindValue(':titre', $titre, PDO::PARAM_STR);
+    $stmt_manga->bindValue(':auteur', $auteur, PDO::PARAM_STR);
+    $stmt_manga->bindValue(':demographie', $demographie, PDO::PARAM_STR);
+    $stmt_manga->bindValue(':langage', $langage, PDO::PARAM_STR);
+    $stmt_manga->execute();
     $manga_id = $pdo->lastInsertId();
 
-    $sql_genre = $pdo->prepare("SELECT id_genre FROM genre WHERE genres = :genres");
-    $sql_genre->bindValue(':genres', $genre, PDO::PARAM_STR);
-    $sql_genre->execute();
+    // # ============= Traitement des genres =============
+    // ## Récupère l'id correspondant au genre
+    $genresArray_id = [];
+    foreach ($genresSaisis as $genre_nom) {
+        $stmt_genres = $pdo->prepare("SELECT id_genre FROM genre WHERE genres = :genres");
+        $stmt_genres->bindValue(':genres', $genre_nom, PDO::PARAM_STR);
+        $stmt_genres->execute();
+        $genre_id = $stmt_genres->fetch(PDO::FETCH_ASSOC);
+        $genresArray_id[] = $genre_id;
+    }
 
-    // Redirection PRG pour empêcher la double soumission au rafraîchissement
+    // ============= Traitement de la liaison entre les mangas et les genres =============
+    // ## Fait la liaison entre le mangas et les genres
+    $stmt_liaison = $pdo->prepare("INSERT INTO `association_manga_genre` (`id_manga`, `id_genre`) VALUES (:id_manga, :id_genre)");
+
+    // ## Insère une ligne pour chaque genre du manga
+    foreach ($genresArray_id as $id_du_genre) {
+        $stmt_liaison->bindValue(':id_manga', $manga_id, PDO::PARAM_INT);
+        $stmt_liaison->bindValue(':id_genre', $id_du_genre['id_genre'], PDO::PARAM_INT);
+        $stmt_liaison->execute();
+    }
+
+    // # Redirection PRG pour empêcher la double soumission au rafraîchissement
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
 
-// Récupération de toutes les datas
-$resManga = $pdo->prepare("SELECT * FROM manga");
-$resManga->execute();
-$allManga = $resManga->fetchAll(PDO::FETCH_ASSOC);
+// # Récupère les genres pour l'input dans le formulaire
+$reqGenre = $pdo->prepare("SELECT genres FROM genre");
+$reqGenre->execute();
+$listGenre = $reqGenre->fetchAll(PDO::FETCH_ASSOC);
 
-// Langage filtre
-$filtreLangage = $_GET['langage'] ?? '';
+// # Récupère tous les mangas sans les conditions de filtres
+$stmt_manga = $pdo->prepare("SELECT * FROM manga");
+$stmt_manga->execute();
+$allMangas = $stmt_manga->fetchAll(PDO::FETCH_ASSOC);
 
-// Genre filtre
-$genres_selectionnes = $_GET['genre'] ?? [];
-$genres_propres = array_map('htmlspecialchars', $genres_selectionnes);
+// ** Récupère les filtre de langages dans l'url
+$filtreLangage = $_GET['langage'] ?? [];
+$strLangage = implode(', ', $filtreLangage);
+echo ($strLangage);
 
-foreach ($allManga as $m) {
-    if ($filtreLangage === 'Tout' || $filtreLangage === '') {
+// ** Récupère les filtre de genres dans l'url
+$filtreGenre = $_GET['genres'] ?? [];
+
+// ** Récupère les filtre de sort dans l'url
+$filtreSort = $_GET['sort'] ?? '';
+
+// * Récupère les mangas avec les conditions de filtres
+foreach ($allMangas as $manga) {
+    if (empty($filtreLangage) && empty($filtreGenre) && $filtreSort === '') {
         $reqManga = $pdo->prepare("SELECT * FROM manga");
         $reqManga->execute();
         $mangas = $reqManga->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $reqManga = $pdo->prepare("SELECT * FROM manga WHERE langage = :langage");
-        $reqManga->bindValue(':langage', $filtreLangage, PDO::PARAM_STR);
-        $reqManga->execute();
-        $mangas = $reqManga->fetchAll(PDO::FETCH_ASSOC);
-    }
-}
+    } // Initialisation de la requête de base et des tableaux
+    $sql = "SELECT DISTINCT m.* FROM manga m";
+    $joins = "";
+    $conditions = [];
+    $params = [];
 
-// Récupération des genres (sans affichage de debug)
-/* $genres = $pdo->query("SELECT genre_1, genre_2, genre_3 FROM manga");
-$resGenres = $genres->fetchAll(PDO::FETCH_ASSOC); */
-
-// Extraire les genres uniques dans un tableau simple
-/* $genresArray = [];
-foreach ($resGenres as $row) {
-    foreach (['genre_1', 'genre_2', 'genre_3'] as $col) {
-        $g = trim($row[$col] ?? '');
-        if ($g !== '') {
-            $genresArray[] = $g;
+    // 1. Si le filtre langage est actif
+    if (!empty($filtreLangage)) {
+        $placeholdersLang = [];
+        foreach ($filtreLangage as $index => $lang) {
+            $key = ":lang_" . $index;
+            $placeholdersLang[] = $key;
+            $params[$key] = $lang;
         }
+        $conditions[] = "m.langage IN (" . implode(', ', $placeholdersLang) . ")";
     }
-} */
 
-// Dédupliquer et réindexer les genres
-if (!empty($genresArray)) {
-    natcasesort($genresArray); // tri sans tenir compte de la casse
-    $genresArray = array_values(array_unique($genresArray));
-} else {
-    $genresArray = [];
-}
+    // 2. Si le filtre genre est actif
+    if (!empty($filtreGenre)) {
+        // On ajoute les jointures vers la table de liaison et de genre uniquement si nécessaire
+        $joins .= " INNER JOIN association_manga_genre amg ON m.id_manga = amg.id_manga";
+        $joins .= " INNER JOIN genre g ON amg.id_genre = g.id_genre";
 
-// Récupération des langages (sans affichage de debug)
-$langages = $pdo->prepare("SELECT langage FROM manga");
-$langages->execute();
-$resLangages = $langages->fetchAll(PDO::FETCH_ASSOC);
-
-// Extraire les langages uniques dans un tableau simple et les normaliser
-$langagesArray = [];
-foreach ($resLangages as $row) {
-    $l = trim($row['langage'] ?? '');
-    if ($l !== '') {
-        $langagesArray[] = $l;
+        $placeholdersGenre = [];
+        foreach ($filtreGenre as $index => $genre) {
+            $key = ":genre_" . $index;
+            $placeholdersGenre[] = $key;
+            $params[$key] = $genre;
+        }
+        $conditions[] = "g.genres IN (" . implode(', ', $placeholdersGenre) . ")";
     }
+
+    // 3. Assemblage des jointures
+    $sql .= $joins;
+
+    // 4. Assemblage des conditions WHERE s'il y en a
+    if (!empty($conditions)) {
+        $sql .= " WHERE " . implode(' AND ', $conditions);
+    }
+
+    // 5. Préparation et exécution de la requête finale
+    $reqManga = $pdo->prepare($sql);
+    $reqManga->execute($params);
+    $mangas = $reqManga->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Dédupliquer et trier (faire avant tout affichage)
-if (!empty($langagesArray)) {
-    natcasesort($langagesArray);
-    $langagesArray = array_values(array_unique($langagesArray));
-} else {
-    $langagesArray = [];
-}
+// # Liste des status
+$listStatus = ['Vide', 'En cours', 'Terminer', 'En pause', 'A lire', 'Abandonner'];
 
 ?>
 
@@ -133,126 +143,120 @@ if (!empty($langagesArray)) {
 
 <body>
     <header>
-        <!-- Ajouter un livre -->
-        <button id="ajout">Ajouter un livre</button>
+        <section id="add" class="add" style="display: none;">
+            <form action="" method="post" class="add__form">
+                <input type="text" placeholder="Titre" name="titre" class="add__form--title" required>
 
-        <div id="overlayAjout">
-            <form id="popup" method="POST">
-                <input type="text" name="titre" id="titre" placeholder="Titre">
-                <input type="text" name="auteur" id="auteur" placeholder="Auteur">
+                <input type="text" placeholder="Auteur" name="auteur" class="add__form--autor" required>
 
-                <select name="demographie" id="demographie">
-                    <option value="Shounen">Shounen</option>
-                    <option value="Shojo">Shojo</option>
+                <select name="demographie" id="demographie" name="demographie" class="add__form--demo">
+                    <option value="Shōnen">Shōnen</option>
+                    <option value="Shōjo">Shōjo</option>
                     <option value="Seinen">Seinen</option>
-                    <option value="Josei">Josei</option>
                 </select>
 
-                <select name="langages" id="langages">
+                <select name="langage" id="langage" name="langage" class="add__form--lang">
                     <option value="Manga">Manga</option>
                     <option value="Manhua">Manhua</option>
                     <option value="Manhwa">Manhwa</option>
                 </select>
 
-                <div id="container-genres">
-                    <div class="genre-input-group">
-                        <input type="text" name="genre[]" placeholder="Nom du genre (ex: Fantasy)">
-                    </div>
-                </div>
-                <button type="button" id="add-genre-btn">+ Ajouter un genre</button>
+                <input type="text" name="genre" id="genre" class="add__form--genre" list="listGenre">
+                <datalist id="listGenre">
+                    <?php foreach ($listGenre as $genre): ?>
+                        <option><?= $genre['genres']; ?></option>
+                    <?php endforeach; ?>
+                </datalist>
 
-                <button type="submit" id="fermer">Ajouter le livre</button>
+                <button class="add__form--new" type="submit">Ajouter</button>
             </form>
-        </div>
+        </section>
+
+        <button id="show">Nouveau manga</button>
+
+        <section>
+            <details class="filter">
+                <summary class="filter__trigger">Filtrer les mangas</summary>
+
+                <div class="filter__overlay">
+                    <form action="" method="get" class="filter__form">
+                        <fieldset class="filter__group">
+                            <legend class="filter__title">Langage</legend>
+
+                            <div class="filter__grid filter__grid--langage">
+                                <label class="filter__item">
+                                    <input type="checkbox" name="langage[]" value="manga"> Manga
+                                </label>
+                                <label class="filter__item">
+                                    <input type="checkbox" name="langage[]" value="manhua"> Manhua
+                                </label>
+                                <label class="filter__item">
+                                    <input type="checkbox" name="langage[]" value="manhwa"> Manhwa
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="filter__group">
+                            <legend class="filter__title">Genre</legend>
+
+                            <div class="filter__grid filter__grid--genres">
+                                <?php foreach ($listGenre as $genre): ?>
+                                    <label class="filter__item">
+                                        <input type="checkbox" name="genres[]" value="<?= htmlspecialchars($genre['genres']); ?>">
+                                        <?= htmlspecialchars($genre['genres']); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="filter__group">
+                            <legend class="filter__title">Tri</legend>
+
+                            <div class="filter__grid filter__grid--sort">
+                                <label class="filter__item">
+                                    <input type="radio" name="sort" value="a-z"> A-Z
+                                </label>
+                                <label class="filter__item">
+                                    <input type="radio" name="sort" value="z-a"> Z-A
+                                </label>
+                                <label class="filter__item">
+                                    <input type="radio" name="sort" value="recent"> + Récent
+                                </label>
+                                <label class="filter__item">
+                                    <input type="radio" name="sort" value="ancient"> + Ancient
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <button type="submit" class="filter__submit">Appliquer</button>
+                        <button type="reset" class="filter__reset">Réinitialiser</button>
+                    </form>
+                </div>
+            </details>
+        </section>
     </header>
 
-    <main>
-        <!-- Filtre -->
-        <section id="filtre">
-            <!-- Langage -->
-            <div id="filtre-langage">
-                <span>Langages</span>
-                <?php if (!empty($langagesArray)): ?>
-                    <a href="?langage=<?= "Tout" ?>" class="filtre-link link-langage">Tout</a>
-                    <?php foreach ($langagesArray as $l): ?>
-                        <?php
-                        if ($l === "Manga") {
-                            $flag = "<span class='fi fi-jp'></span>";
-                        } elseif ($l === "Manhwa") {
-                            $flag = "<span class='fi fi-kr'></span>";
-                        } elseif ($l === "Manhua") {
-                            $flag = "<span class='fi fi-cn'></span>";
-                        }
-                        ?>
-                        <a href="?langage=<?= $l ?>" class="filtre-link link-langage"><?= $flag . $l ?></a>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <option value="">Aucun langage</option>
-                <?php endif; ?>
-            </div>
+    <main class="show-manga">
+        <?php foreach ($mangas as $manga): ?>
+            <div id="<?= strtolower(str_replace(' ', '-', $manga['titre'])); ?>" class="<?= strtolower($manga['langage']); ?> show-manga__cards">
 
-            <!-- Genre -->
-            <span>Genre</span>
-            <div id="filtre-genre" role="menu">
-                <?php if (!empty($genresArray)): ?>
-                    <ul>
-                        <li tabindex="0" class="tout filtre-liste"><span class="genre-name">Tout</span></li>
-                        <?php foreach ($genresArray as $g): ?>
-                            <li tabindex="0" class="<?= strtolower(str_replace(' ', '-', $g)) ?> filtre-liste"><span class="genre-name"><?= $g ?></span></li>
+                <div class="show-manga__status-menu" aria-hidden="true" role="menu">
+                    <ul class="show-manga__status-menu--list">
+                        <?php foreach ($listStatus as $status): ?>
+                            <li role="menuitem" tabindex="0" data-status="<?php echo htmlspecialchars($status); ?>" class="<?= strtolower(str_replace(' ', '-', htmlspecialchars($status))); ?>" class="show-manga__status-menu--list-content"><?php echo htmlspecialchars($status); ?></li>
                         <?php endforeach; ?>
                     </ul>
-                <?php endif; ?>
-                <br>
-                <div id="bouton">
-                    <button id="reset">Reset</button>
-                    <button id="search">Rechercher</button>
                 </div>
+
+                <div class="show-manga__status" data-status="<?php echo htmlspecialchars($status); ?>"></div>
+
+                <div class="show-manga__info">
+                    <h2><?= $manga['titre'] ?></h2>
+                    <h3><?= $manga['auteur'] ?></h3>
+                </div>
+
             </div>
-
-            <!-- Tri -->
-            <label for="tri">Tri</label>
-            <select name="tri" id="tri" onchange="this.form.submit()">
-                <option value="">-- --</option>
-                <?php foreach ($triList as $t): ?>
-                    <?php /* $select = $tri === $t ? 'selected' : '' */ ?>
-                    <option value="<?php echo $t; ?>" $select>
-                        <?php echo $t; ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </section>
-
-        <!-- Tableau -->
-        <section id="tableau">
-            <?php foreach ($mangas as $m): ?>
-                <div id="<?= strtolower(str_replace(' ', '-', $m['titre'])); ?>" class="<?= strtolower($m['langage']); ?> cards">
-
-                    <div class="statusMenu" aria-hidden="true" role="menu">
-                        <ul>
-                            <?php foreach ($status as $s): ?>
-                                <li role="menuitem" tabindex="0" data-status="<?php echo htmlspecialchars($s); ?>" class="<?= strtolower(str_replace(' ', '-', htmlspecialchars($s))); ?>"><?php echo htmlspecialchars($s); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-
-                    <div class="status" data-status="<?php echo htmlspecialchars($s); ?>"></div>
-
-                    <div class="content">
-                        <h2><?= $m['titre'] ?></h2>
-                        <h3><?= $m['auteur'] ?></h3>
-                        <div class="genre">
-                            <p class="<?= strtolower($m['genre_1']) ?? ''; ?>"> <?= $m['genre_1'] ?? '' ?></p>
-                            <p class="<?= strtolower($m['genre_2']) ?? ''; ?>"> <?= $m['genre_2'] ?? '' ?></p>
-                            <p class="<?= strtolower($m['genre_3']) ?? ''; ?>"> <?= $m['genre_3'] ?? '' ?></p>
-                        </div>
-                        <div class="theme">
-                            <p class="<?= strtolower($m['theme']) ?? ''; ?>"><?= $m['theme'] ?? '' ?></p>
-                        </div>
-                    </div>
-
-                </div>
-            <?php endforeach; ?>
-        </section>
+        <?php endforeach; ?>
     </main>
 </body>
 

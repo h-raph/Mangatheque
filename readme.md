@@ -1,15 +1,9 @@
-<form method="GET"> 
-                    <label for="genre">Genres</label>
-                    <select name="genre" id="genre" onchange="this.form.submit()">
-                        <?php if (!empty($genresArray)): ?>
-                            <option value="Tout">-- Tout --</option>
-                            <?php foreach ($genresArray as $g): ?>
-                                <?php $select = $selectGenre === $g ? 'selected' : '' ?>
-                                <option value="<?php echo $g; ?>" <?= $select ?>>
-                                    <?php echo $g; ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <option value="">Aucun genre</option>
-                        <?php endif; ?>
-                    </select>
+<div class="statusMenu" aria-hidden="true" role="menu">
+                    <ul>
+                        <?php foreach ($status as $s): ?>
+                            <li role="menuitem" tabindex="0" data-status="<?php echo htmlspecialchars($s); ?>" class="<?= strtolower(str_replace(' ', '-', htmlspecialchars($s))); ?>"><?php echo htmlspecialchars($s); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+
+<div class="status" data-status="<?php echo htmlspecialchars($s); ?>"></div>
