@@ -1,43 +1,165 @@
+@charset "UTF-8";
 .add__form {
-    max-width: 500px;
-    padding: 12px 24px;
-    margin: 0 auto;
-    border: 2px solid black;
-    border-radius: 8px;
+  max-width: 500px;
+  padding: 12px 24px;
+  margin: 0 auto;
+  border: 2px solid black;
+  border-radius: 8px;
 }
 
 button {
-    padding: 6px 12px;
-    border: none;
-    cursor: pointer;
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
 }
 
-#filter {
-    height: 20px;
-    width: 50px;
-    overflow: hidden;
+.filter {
+  position: relative;
+  /* Repère pour le positionnement de l'overlay */
+  width: fit-content;
+}
+.filter__trigger {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  list-style: none;
+  /* Cache la flèche par défaut sur certains navigateurs */
+}
+.filter__overlay {
+  position: absolute;
+  top: calc(100% + 8px);
+  /* S'affiche juste en dessous du bouton */
+  left: 0;
+  width: 25vw;
+  /* 25% de la largeur de l'écran */
+  min-width: 250px;
+  /* Sécurité pour ne pas être trop étroit sur mobile */
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  /* Passe au-dessus du reste du contenu */
+}
+.filter__form {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.filter__group {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.filter__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.filter__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  /* Défilement si la liste de genres est très longue */
+}
+.filter__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.filter__submit, .filter__reset {
+  align-self: flex-start;
+  padding: 6px 16px;
+  cursor: pointer;
 }
 
-#filter:hover,
-#filter:has(option:focus) {
-    height: fit-content;
-    width: fit-content;
+.show-manga {
+  width: 100vw;
+  display: grid;
+  justify-items: center;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 20px;
+}
+.show-manga__status-menu {
+  display: none;
+  position: absolute;
+  top: 20px;
+  /* sera recalculé en JS si besoin */
+  left: 10px;
+  min-width: 140px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  padding: 6px 8px;
+}
+.show-manga__status-menu--list {
+  list-style: none;
+}
+.show-manga__status-menu--list-content {
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.show-manga__status-menu--list-content:hover, .show-manga__status-menu--list-content:focus {
+  background: #f0f0f0;
+  outline: none;
+}
+.show-manga__status {
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  border: 1px solid black;
+  margin-right: 8px;
+}
+.show-manga__status--vide {
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  border: 1px solid black;
+  margin-right: 8px;
+}
+.show-manga__status--en-cours {
+  background-color: green;
+  border: none;
+}
+.show-manga__status--terminer {
+  background-color: rgb(4, 0, 128);
+  border: none;
+}
+.show-manga__status--en-pause {
+  background-color: orange;
+  border: none;
+}
+.show-manga__status--a-lire {
+  background-color: rgb(128, 0, 115);
+  border: none;
+}
+.show-manga__status--abandonner {
+  background-color: red;
+  border: none;
+}
+.show-manga__cards {
+  position: relative;
+  width: fit-content;
+  min-height: fit-content;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 10px;
+}
+.show-manga__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: fit-content;
 }
 
-#filter optgroup {
-    display: grid;
-    grid-auto-flow: column;
-    justify-content: space-around;
-    gap: 10px;
-}
-
-
-option {
-    background: #eeeeee;
-    padding: 10px;
-    outline: none;
-}
-
-option:checked {
-    font-weight: bold;
-}
+/*# sourceMappingURL=mangaStyle.css.map */

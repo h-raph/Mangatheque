@@ -1,0 +1,186 @@
+.add__form {
+    max-width: 500px;
+    padding: 12px 24px;
+    margin: 0 auto;
+    border: 2px solid black;
+    border-radius: 8px;
+}
+
+button {
+    padding: 6px 12px;
+    border: none;
+    cursor: pointer;
+}
+
+.filter {
+    position: relative;
+    /* Repère pour le positionnement de l'overlay */
+    width: fit-content;
+
+    &__trigger {
+        cursor: pointer;
+        font-weight: bold;
+        padding: 8px 12px;
+        background-color: #f0f0f0;
+        border-radius: 6px;
+        list-style: none;
+        /* Cache la flèche par défaut sur certains navigateurs */
+    }
+
+    &__overlay {
+        position: absolute;
+        top: calc(100% + 8px);
+        /* S'affiche juste en dessous du bouton */
+        left: 0;
+        width: 25vw;
+        /* 25% de la largeur de l'écran */
+        min-width: 250px;
+        /* Sécurité pour ne pas être trop étroit sur mobile */
+        background: #ffffff;
+        padding: 16px;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        z-index: 100;
+        /* Passe au-dessus du reste du contenu */
+    }
+
+    &__form {
+        margin-top: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    &__group {
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    &__title {
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        /* Défilement si la liste de genres est très longue */
+
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    &__submit,
+    &__reset {
+        align-self: flex-start;
+        padding: 6px 16px;
+        cursor: pointer;
+    }
+}
+
+.show-manga {
+    width: 100vw;
+    display: grid;
+    justify-items: center;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 20px;
+
+    &__status-menu {
+        display: none;
+        position: absolute;
+        top: 20px;
+        /* sera recalculé en JS si besoin */
+        left: 10px;
+        min-width: 140px;
+        background: #fff;
+        border-radius: 6px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        z-index: 50;
+        padding: 6px 8px;
+
+        &--list {
+            list-style: none;
+
+            &-content {
+                padding: 8px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+
+                &:hover,
+                &:focus {
+                    background: #f0f0f0;
+                    outline: none;
+                }
+            }
+        }
+    }
+
+    &__status {
+        width: 10px;
+        height: 10px;
+        border-radius: 10px;
+        border: 1px solid black;
+        margin-right: 8px;
+
+        &--vide {
+            width: 10px;
+            height: 10px;
+            border-radius: 10px;
+            border: 1px solid black;
+            margin-right: 8px;
+        }
+
+        &--en-cours {
+            background-color: green;
+            border: none;
+        }
+
+        &--terminer {
+            background-color: rgb(4, 0, 128);
+            border: none;
+        }
+
+        &--en-pause {
+            background-color: orange;
+            border: none;
+        }
+
+        &--a-lire {
+            background-color: rgb(128, 0, 115);
+            border: none;
+        }
+
+        &--abandonner {
+            background-color: red;
+            border: none;
+        }
+    }
+
+    &__cards {
+        position: relative;
+        width: fit-content;
+        min-height: fit-content;
+        padding: 5px;
+        border: 1px solid black;
+        border-radius: 10px;
+    }
+
+    &__info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        min-height: fit-content;
+    }
+}
