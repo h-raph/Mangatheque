@@ -1,6 +1,7 @@
 <?php
 // Ouverture session et connexion à la base de donnée
 require_once '../partials/_config.php';
+require_once '../partials/_fil_put_content.php';
 
 // ==================== Traitement du formulaire POST ====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -59,18 +60,18 @@ $stmt_manga = $pdo->prepare("SELECT * FROM manga");
 $stmt_manga->execute();
 $allMangas = $stmt_manga->fetchAll(PDO::FETCH_ASSOC);
 
-// ** Récupère les filtre de langages dans l'url
+// ## Récupère les filtre de langages dans l'url
 $filtreLangage = $_GET['langage'] ?? [];
 $strLangage = implode(', ', $filtreLangage);
 echo ($strLangage);
 
-// ** Récupère les filtre de genres dans l'url
+// ## Récupère les filtre de genres dans l'url
 $filtreGenre = $_GET['genres'] ?? [];
 
-// ** Récupère les filtre de sort dans l'url
+// ## Récupère les filtre de sort dans l'url
 $filtreSort = $_GET['sort'] ?? '';
 
-// * Récupère les mangas avec les conditions de filtres
+// # Récupère les mangas avec les conditions de filtres
 foreach ($allMangas as $manga) {
     if (empty($filtreLangage) && empty($filtreGenre) && $filtreSort === '') {
         $reqManga = $pdo->prepare("SELECT * FROM manga");
@@ -253,6 +254,8 @@ $listStatus = ['Vide', 'En cours', 'Terminer', 'En pause', 'A lire', 'Abandonner
                 <div class="show-manga__info">
                     <h2><?= $manga['titre'] ?></h2>
                     <h3><?= $manga['auteur'] ?></h3>
+                    <?php $monResume = getResumeAvecCache($manga['titre']); 
+                    echo "<p>" . htmlspecialchars($monResume) . "</p>";?>
                 </div>
 
             </div>
